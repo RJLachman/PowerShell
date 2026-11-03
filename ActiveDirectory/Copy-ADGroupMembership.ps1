@@ -76,9 +76,9 @@ if ($groupsToAdd.Count -eq 0) {
 }
 
 # Bevestiging vragen
-$confirm = Read-Host "Weet je het zeker? Deze memberships kopiëren? (Y/N)"
+$confirm = Read-Host "Weet je het zeker? Deze memberships kopiëren? (J/N)"
 
-if ($confirm -eq "Y" -or $confirm -eq "y") {
+if ($confirm -eq "J" -or $confirm -eq "j" -or $confirm -eq "Ja" -or $confirm -eq "ja") {
     Write-Host "`nKopiëren starten..." -ForegroundColor Yellow
     $success = 0
     $failed = 0
