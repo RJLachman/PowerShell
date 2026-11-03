@@ -1,36 +1,65 @@
-#enter treshold days
-$deletionTresholdDays= 60
+<#
+.SYNOPSIS
+ Exporteert en verwijdert (na bevestiging) Entra ID-apparaten die al X dagen niet zijn ingelogd.
 
-Connect-AzureAD -ErrorAction Stop
+.DESCRIPTION
+ Gebruikt Microsoft Graph PowerShell (vervanger van de uitgefaseerde AzureAD-module).
+ - Haalt alle apparaten op met ApproximateLastSignInDateTime ouder dan de drempel.
+ - Exporteert ze naar een CSV naast het script.
+ - Vraagt bevestiging (J/N) en verwijdert ze daarna.
 
-$deletionTreshold= (Get-Date).AddDays(-$deletionTresholdDays)
+.PARAMETER DeletionThresholdDays
+ Aantal dagen zonder aanmelding (standaard 60).
 
-$allDevices=Get-AzureADDevice -All:$true | Where {$_.ApproximateLastLogonTimeStamp -le $deletionTreshold}
+.NOTES
+ Vereisten: Install-Module Microsoft.Graph.Identity.DirectoryManagement
+ Rechten : Device.ReadWrite.All (Cloud Device Administrator of hoger)
+#>
 
-$exportPath=$(Join-Path $PSScriptRoot "AzureADDeviceExport.csv")
+[CmdletBinding()]
+param(
+    [int]$DeletionThresholdDays = 60
+)
 
-$allDevices | Select-Object -Property DisplayName, ObjectId, ApproximateLastLogonTimeStamp, DeviceOSType, DeviceOSVersion, IsCompliant, IsManaged `
-| Export-Csv -Path $exportPath -UseCulture -NoTypeInformation
+Import-Module Microsoft.Graph.Identity.DirectoryManagement -ErrorAction Stop
+Connect-MgGraph -Scopes "Device.ReadWrite.All" -NoWelcome -ErrorAction Stop
 
-Write-Output "Find report with all devices under: $exportPath"
+$deletionThreshold = (Get-Date).AddDays(-$DeletionThresholdDays)
 
-$confirmDeletion=$null
+Write-Host "Apparaten ophalen..." -ForegroundColor Cyan
+$allDevices = Get-MgDevice -All -Property Id, DeviceId, DisplayName, ApproximateLastSignInDateTime, OperatingSystem, OperatingSystemVersion, IsCompliant, IsManaged |
+    Where-Object { $_.ApproximateLastSignInDateTime -and $_.ApproximateLastSignInDateTime -le $deletionThreshold }
 
-while ($confirmDeletion -notin @('J','j','Ja','ja','N','n','Nee','nee')){
-
-    $confirmDeletion = Read-Host "Delete all Azure AD devices which haven't contacted your tenant since $deletionTresholdDays days (J/N)"
+if (-not $allDevices) {
+    Write-Host "Geen apparaten gevonden die langer dan $DeletionThresholdDays dagen niet zijn ingelogd." -ForegroundColor Green
+    return
 }
 
-if ($confirmDeletion -in @('J','j','Ja','ja')){
+$exportPath = Join-Path $PSScriptRoot "EntraDeviceExport.csv"
+$allDevices |
+    Select-Object DisplayName, Id, DeviceId, ApproximateLastSignInDateTime, OperatingSystem, OperatingSystemVersion, IsCompliant, IsManaged |
+    Export-Csv -Path $exportPath -UseCulture -NoTypeInformation
 
-    $allDevices | ForEach-Object {
+Write-Host "$(@($allDevices).Count) apparaten gevonden. Rapport: $exportPath" -ForegroundColor Yellow
 
-        Write-Output "Removing device $($PSItem.ObjectId)"
+$confirmDeletion = $null
+while ($confirmDeletion -notin @('J','j','Ja','ja','N','n','Nee','nee')) {
+    $confirmDeletion = Read-Host "Alle apparaten verwijderen die sinds $DeletionThresholdDays dagen niet zijn ingelogd? (J/N)"
+}
 
-        Remove-AzureADDevice -ObjectId $PSItem.ObjectId
+if ($confirmDeletion -in @('J','j','Ja','ja')) {
+    $success = 0; $failed = 0
+    foreach ($device in $allDevices) {
+        try {
+            Remove-MgDevice -DeviceId $device.Id -ErrorAction Stop
+            Write-Host "Verwijderd: $($device.DisplayName) ($($device.Id))" -ForegroundColor Green
+            $success++
+        } catch {
+            Write-Host "Mislukt: $($device.DisplayName) - $($_.Exception.Message)" -ForegroundColor Red
+            $failed++
+        }
     }
-
+    Write-Host "`nKlaar. Succesvol: $success | Mislukt: $failed" -ForegroundColor Cyan
 } else {
-  
-    Write-Output "Exiting..."
+    Write-Host "Geannuleerd. Er is niets verwijderd." -ForegroundColor Yellow
 }
