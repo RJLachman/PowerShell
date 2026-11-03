@@ -22,7 +22,17 @@ param(
 )
 
 Import-Module Microsoft.Graph.Identity.DirectoryManagement -ErrorAction Stop
-Connect-MgGraph -Scopes "Device.ReadWrite.All" -NoWelcome -ErrorAction Stop
+# WAM-login (Windows Web Account Manager) faalt in o.a. PowerShell ISE en embedded terminals
+# ("A window handle must be configured"). Daarom uitzetten en zo nodig terugvallen op device code.
+if (Get-Command Set-MgGraphOption -ErrorAction SilentlyContinue) {
+    Set-MgGraphOption -DisableLoginByWAM $true
+}
+try {
+    Connect-MgGraph -Scopes "Device.ReadWrite.All" -NoWelcome -ErrorAction Stop
+} catch {
+    Write-Warning "Interactieve login mislukt ($($_.Exception.Message)). Terugvallen op device code login..."
+    Connect-MgGraph -Scopes "Device.ReadWrite.All" -UseDeviceCode -NoWelcome -ErrorAction Stop
+}
 
 $deletionThreshold = (Get-Date).AddDays(-$DeletionThresholdDays)
 
