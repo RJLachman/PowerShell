@@ -27,3 +27,5 @@ Maakt een overzichtelijk CSV-rapport van wanneer gebruikers voor het laatst zijn
 ```
 
 > `LastLogonTimestamp` in AD kan 9 tot 14 dagen achterlopen. Gebruik `-ExactADLogon` voor de exacte waarde.
+
+> Dit script is alleen-lezen: het wijzigt niets in AD of Entra ID en heeft daarom geen `-WhatIf`/`-Force` nodig. Gebruik `Get-Help .\Get-UserLastLogonReport.ps1 -Full` voor alle parameters.

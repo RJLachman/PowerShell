@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Maakt een overzichtelijk CSV-rapport van de laatste aanmelding van gebruikers.
 
@@ -38,15 +38,40 @@
 
 .EXAMPLE
     .\Get-UserLastLogonReport.ps1 -InputFile 'D:\lijsten\users.txt' -OutputFolder 'D:\rapporten' -ExactADLogon
+
+.INPUTS
+    Geen. Het script leest de adressen uit -InputFile.
+
+.OUTPUTS
+    Een CSV-bestand UserLastLogonReport_<yyyyMMdd_HHmm>.csv in -OutputFolder.
+
+.NOTES
+    Auteur   : RJ Lachman
+    Versie   : 1.1.0
+    Vereisten: ActiveDirectory: RSAT-module ActiveDirectory.
+               EntraID       : module Microsoft.Graph, scopes User.Read.All + AuditLog.Read.All,
+                               en een Entra ID P1/P2-licentie voor signInActivity.
+    Dit script wijzigt niets in AD of Entra ID; het leest alleen gegevens en schrijft een CSV.
 #>
 [CmdletBinding()]
 param(
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
     [string]$InputFile = 'C:\temp\userslogin.txt',
+
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
     [string]$OutputFolder = 'C:\temp',
+
+    [Parameter()]
     [ValidateSet('Both', 'EntraID', 'ActiveDirectory')]
     [string]$Source = 'ActiveDirectory',
+
+    [Parameter()]
     [ValidateRange(1, 3650)]
     [int]$InactiveDays = 30,
+
+    [Parameter()]
     [switch]$ExactADLogon
 )
 
@@ -55,11 +80,21 @@ $useEntra = $Source -in 'Both', 'EntraID'
 $useAD    = $Source -in 'Both', 'ActiveDirectory'
 $dateFmt  = 'dd-MM-yyyy HH:mm'
 
-function Write-Status([string]$Message, [string]$Color = 'Cyan') {
+function Write-Status {
+    <#
+    .SYNOPSIS
+        Schrijft een statusregel met tijdstempel naar de console.
+    #>
+    param([string]$Message, [string]$Color = 'Cyan')
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $Message" -ForegroundColor $Color
 }
 
-function Format-Date($Date) {
+function Format-Date {
+    <#
+    .SYNOPSIS
+        Formatteert een datum als dd-MM-yyyy HH:mm, of een lege string als er geen datum is.
+    #>
+    param($Date)
     if ($Date) { return $Date.ToString($dateFmt) } else { return '' }
 }
 
@@ -225,8 +260,14 @@ foreach ($email in $emails) {
 Write-Progress -Activity 'Gebruikers opzoeken' -Completed
 
 # --- Exporteren ---------------------------------------------------------------
-if (-not (Test-Path -LiteralPath $OutputFolder)) {
-    New-Item -ItemType Directory -Path $OutputFolder -Force | Out-Null
+try {
+    if (-not (Test-Path -LiteralPath $OutputFolder)) {
+        New-Item -ItemType Directory -Path $OutputFolder -Force | Out-Null
+    }
+}
+catch {
+    Write-Status "Uitvoermap $OutputFolder kan niet worden aangemaakt: $($_.Exception.Message)" 'Red'
+    return
 }
 $outFile = Join-Path $OutputFolder ("UserLastLogonReport_{0}.csv" -f (Get-Date -Format 'yyyyMMdd_HHmm'))
 
@@ -236,7 +277,13 @@ $sorted = $results | Sort-Object @{ Expression = { $_.Status -eq 'Niet gevonden'
                                  'Weergavenaam'
 
 $encoding = if ($PSVersionTable.PSVersion.Major -ge 6) { 'utf8BOM' } else { 'UTF8' }
-$sorted | Export-Csv -LiteralPath $outFile -NoTypeInformation -Delimiter ';' -Encoding $encoding
+try {
+    $sorted | Export-Csv -LiteralPath $outFile -NoTypeInformation -Delimiter ';' -Encoding $encoding
+}
+catch {
+    Write-Status "Rapport opslaan mislukt ($outFile): $($_.Exception.Message)" 'Red'
+    return
+}
 
 # --- Samenvatting -------------------------------------------------------------
 Write-Host ''
