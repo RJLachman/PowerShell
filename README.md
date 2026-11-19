@@ -7,3 +7,4 @@ Verzameling PowerShell-scripts, ingedeeld per onderwerp.
 - [Exchange](Exchange) – Exchange on-premises / hybrid
 - [Microsoft365/EntraID](Microsoft365/EntraID) – Entra ID (Azure AD) / apparaten
 - [Microsoft365/Purview](Microsoft365/Purview) – Security & Compliance / Content Search
+- [Reporting](Reporting) – rapportages (o.a. laatste aanmelding van gebruikers)
