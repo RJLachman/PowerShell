@@ -22,7 +22,7 @@
     Map waarin het CSV-rapport wordt opgeslagen.
 
 .PARAMETER Source
-    Both (standaard), EntraID of ActiveDirectory.
+    ActiveDirectory (standaard), EntraID of Both.
 
 .PARAMETER InactiveDays
     Na hoeveel dagen zonder aanmelding een gebruiker als 'Inactief' wordt gemarkeerd (standaard 30).
@@ -44,7 +44,7 @@ param(
     [string]$InputFile = 'C:\temp\userslogin.txt',
     [string]$OutputFolder = 'C:\temp',
     [ValidateSet('Both', 'EntraID', 'ActiveDirectory')]
-    [string]$Source = 'Both',
+    [string]$Source = 'ActiveDirectory',
     [ValidateRange(1, 3650)]
     [int]$InactiveDays = 30,
     [switch]$ExactADLogon
@@ -89,9 +89,11 @@ if ($invalid) {
 # --- Verbinden ----------------------------------------------------------------
 if ($useEntra) {
     if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Users)) {
-        Write-Status 'Module Microsoft.Graph.Users ontbreekt. Installeer met: Install-Module Microsoft.Graph -Scope CurrentUser' 'Red'
-        return
+        Write-Status 'Module Microsoft.Graph.Users ontbreekt (Install-Module Microsoft.Graph -Scope CurrentUser). Entra ID wordt overgeslagen.' 'Yellow'
+        $useEntra = $false
     }
+}
+if ($useEntra) {
     Import-Module Microsoft.Graph.Users
     $scopes = 'User.Read.All', 'AuditLog.Read.All'
     try {

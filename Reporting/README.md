@@ -6,7 +6,7 @@ Maakt een overzichtelijk CSV-rapport van wanneer gebruikers voor het laatst zijn
 
 **Werking**
 1. Leest e-mailadressen uit `C:\temp\userslogin.txt` (één per regel; lege regels en `#`-regels worden genegeerd, dubbele adressen worden ontdubbeld).
-2. Zoekt elke gebruiker op in **Entra ID** (Microsoft Graph `signInActivity`) en/of **on-prem AD** (`LastLogonTimestamp`).
+2. Zoekt elke gebruiker op in **on-prem AD** (`LastLogonTimestamp`, standaard) en optioneel in **Entra ID** (Microsoft Graph `signInActivity`, via `-Source EntraID` of `-Source Both`).
 3. Exporteert naar `C:\temp\UserLastLogonReport_<datum>.csv` met `;` als scheidingsteken (opent direct goed in Nederlandse Excel).
 4. Toont een gekleurde samenvatting en vraagt (J/N) of het rapport geopend moet worden.
 
@@ -20,7 +20,8 @@ Maakt een overzichtelijk CSV-rapport van wanneer gebruikers voor het laatst zijn
 
 **Voorbeelden**
 ```powershell
-.\Get-UserLastLogonReport.ps1                                   # Entra ID + AD, standaardpaden
+.\Get-UserLastLogonReport.ps1                                   # lokale AD, standaardpaden
+.\Get-UserLastLogonReport.ps1 -Source Both                      # AD + Entra ID
 .\Get-UserLastLogonReport.ps1 -Source EntraID -InactiveDays 60  # alleen Entra ID, inactief na 60 dagen
 .\Get-UserLastLogonReport.ps1 -ExactADLogon                     # exacte AD-logon via alle DC's (trager)
 ```
