@@ -1,4 +1,4 @@
-@{
+﻿@{
     # Alleen fouten en waarschuwingen worden gerapporteerd (en laten CI falen).
     Severity     = @('Error', 'Warning')
 

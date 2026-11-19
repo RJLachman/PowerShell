@@ -13,10 +13,12 @@ Een verzameling praktische PowerShell-scripts voor het beheer van Active Directo
 | [ActiveDirectory](ActiveDirectory) | [Copy-ADGroupMembership.ps1](ActiveDirectory/Copy-ADGroupMembership.ps1) | Kopieert groepslidmaatschappen van een brongebruiker naar een doelgebruiker (op e-mailadres). |
 | [Exchange](Exchange) | [New-SharedRemoteMailbox.ps1](Exchange/New-SharedRemoteMailbox.ps1) | Maakt een shared remote mailbox aan (hybrid) en zet de AD Description. |
 | [Microsoft365/EntraID](Microsoft365/EntraID) | [Remove-StaleAzureADDevices.ps1](Microsoft365/EntraID/Remove-StaleAzureADDevices.ps1) | Exporteert en verwijdert Entra ID-apparaten die al X dagen niet zijn aangemeld (Microsoft Graph). |
-| [Microsoft365/Purview](Microsoft365/Purview) | [SoftDelete-EmailFromSender.ps1](Microsoft365/Purview/SoftDelete-EmailFromSender.ps1) | Zoekt via Content Search alle mails van een afzender en soft-delete ze na bevestiging. |
-| [Reporting](Reporting) | [Get-UserLastLogonReport.ps1](Reporting/Get-UserLastLogonReport.ps1) | CSV-rapport van de laatste aanmelding van gebruikers (AD en/of Entra ID). |
+| [Microsoft365/Purview](Microsoft365/Purview) | [Remove-EmailFromSender.ps1](Microsoft365/Purview/Remove-EmailFromSender.ps1) | Zoekt via Content Search alle mails van een afzender en soft-delete ze na bevestiging. |
+| [Reporting](Reporting) | [Get-UserLastLogonReport.ps1](Reporting/Get-UserLastLogonReport.ps1) | CSV-rapport van de laatste aanmelding van gebruikers (AD en/of Entra ID). Alleen-lezen. |
 
 Elke map heeft een eigen README met details, vereisten en voorbeelden.
+
+Scripts die iets wijzigen of verwijderen ondersteunen **`-WhatIf`** (laat zien wat er zou gebeuren), **`-Confirm`** en **`-Force`** (slaat de J/N-vraag over). Zonder deze parameters vragen ze altijd eerst om een J/N-bevestiging (`J`, `j`, `Ja` of `ja`).
 
 ## Vereisten
 
