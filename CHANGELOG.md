@@ -7,12 +7,37 @@ en dit project volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-19
+
+Eerste officiële release.
+
+### Scripts
+- **ActiveDirectory/Copy-ADGroupMembership.ps1** – kopieert groepslidmaatschappen van een bron- naar een doelgebruiker (op e-mailadres).
+- **Exchange/New-SharedRemoteMailbox.ps1** – maakt een shared remote mailbox aan (hybrid) en zet de AD Description.
+- **Microsoft365/EntraID/Remove-StaleAzureADDevices.ps1** – exporteert en verwijdert Entra ID-apparaten die al X dagen niet zijn aangemeld (Microsoft Graph, zonder WAM, met device code fallback).
+- **Microsoft365/Purview/Remove-EmailFromSender.ps1** – zoekt via Content Search mails van een afzender en soft-delete ze na bevestiging.
+- **Reporting/Get-UserLastLogonReport.ps1** – CSV-rapport van de laatste aanmelding van gebruikers uit AD en/of Entra ID.
+
 ### Toegevoegd
 - `LICENSE` (MIT), `.gitignore`, `SECURITY.md`, `CONTRIBUTING.md` en dit `CHANGELOG.md`.
 - `PSScriptAnalyzerSettings.psd1` met gedeelde lintregels.
 - GitHub Actions-workflow `lint.yml` (parse check + PSScriptAnalyzer bij push en pull request).
 - Dependabot voor GitHub Actions, issue-templates en een pull request-template.
 - VS Code-instellingen (`.vscode/settings.json`) die de PSScriptAnalyzer-instellingen gebruiken.
+- `-WhatIf`, `-Confirm` en `-Force` voor alle scripts die iets wijzigen of verwijderen (de J/N-vraag blijft standaard).
+- Nieuwe optionele parameters: `-SenderAddress` en `-PollIntervalSeconds` (Purview), `-ExportPath` (Entra ID), `-SourceEmail`/`-TargetEmail` (AD), `-DisplayName`/`-Alias` (Exchange).
+- Volledige comment-based help (`Get-Help -Full`) voor alle scripts.
 
 ### Gewijzigd
-- Root-README herschreven met badges, scriptoverzicht, vereisten, gebruik en disclaimer.
+- `SoftDelete-EmailFromSender.ps1` hernoemd naar **`Remove-EmailFromSender.ps1`** (goedgekeurd werkwoord).
+- Root-README herschreven met badges, scriptoverzicht, vereisten, gebruik en disclaimer; map-READMEs uitgebreid met parameters.
+- Alle scripts slaan op als UTF-8 met BOM (correcte weergave van é/ë/✅ in Windows PowerShell 5.1).
+- Betere foutafhandeling (try/catch) rond verbinden, ophalen, exporteren en wijzigen.
+
+### Opgelost
+- Purview: het script wachtte eindeloos als een search of purge de status `Failed` kreeg; het stopt nu met een melding.
+- Purview: gebruikte de automatische variabele `$sender`.
+- Active Directory: enkele quotes in een e-mailadres konden het AD-filter breken.
+
+[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/RJLachman/PowerShell/releases/tag/v1.0.0
