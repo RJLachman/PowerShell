@@ -1,0 +1,49 @@
+# --- Exports en uitvoer van scripts ---
+*.csv
+*.xlsx
+*.log
+*.txt
+!requirements.txt
+Transcript*.txt
+PowerShell_transcript*
+*_transcript*.txt
+
+# --- Credentials / secrets (nooit committen) ---
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.clixml
+*.secret
+.env
+.env.*
+secrets.*
+credentials.*
+
+# --- PowerShell ---
+*.ps1xml.bak
+TestResults/
+testResults.xml
+coverage.xml
+out/
+output/
+
+# --- Windows ---
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- macOS ---
+.DS_Store
+
+# --- Editors ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
