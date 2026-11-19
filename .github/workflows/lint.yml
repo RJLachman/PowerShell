@@ -1,0 +1,55 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  psscriptanalyzer:
+    name: PSScriptAnalyzer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force
+          Get-Module -ListAvailable PSScriptAnalyzer | Select-Object Name, Version
+
+      - name: Parse check
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem -Path . -Recurse -Include *.ps1, *.psm1, *.psd1 | ForEach-Object {
+              $tokens = $null; $errors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+              if ($errors) {
+                  $failed = $true
+                  $errors | ForEach-Object { Write-Output "::error file=$($_.Extent.File),line=$($_.Extent.StartLineNumber)::$($_.Message)" }
+              }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+          if ($results) {
+              $results | Format-Table -AutoSize RuleName, Severity, ScriptName, Line, Message | Out-String -Width 4096 | Write-Output
+              foreach ($r in $results) {
+                  $level = if ($r.Severity -eq 'Error') { 'error' } else { 'warning' }
+                  Write-Output "::${level} file=$($r.ScriptPath),line=$($r.Line)::[$($r.RuleName)] $($r.Message)"
+              }
+              Write-Output "$(@($results).Count) bevinding(en) gevonden."
+              exit 1
+          }
+          Write-Output 'Geen bevindingen. 🎉'
