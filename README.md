@@ -46,7 +46,9 @@ Get-Help .\ActiveDirectory\Copy-ADGroupMembership.ps1 -Full
 .\ActiveDirectory\Copy-ADGroupMembership.ps1 -WhatIf
 
 # Groepsleden vergelijken met een e-maillijst (alleen-lezen, Excel-rapport)
-.\ActiveDirectory\Compare-ADGroupMembership.ps1 -GroupName 'soft-apps-154' -InputFile 'C:\temp\suwi.txt' -ExpectedCount 84
+# Zonder parameters vraagt het script om de AD-groep en het invoerbestand
+.\ActiveDirectory\Compare-ADGroupMembership.ps1
+.\ActiveDirectory\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
 ```
 
 Gedownloade scripts zijn mogelijk geblokkeerd door Windows. Deblokkeer ze met `Unblock-File` of stel een passende execution policy in (bijv. `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`).

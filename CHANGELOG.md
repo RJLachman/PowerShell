@@ -7,6 +7,11 @@ en dit project volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-23
+
+### Gewijzigd
+- **Compare-ADGroupMembership.ps1** – geen vaste groepsnaam of invoerbestand meer. Zonder `-GroupName` kun je op naam zoeken in AD en een groep kiezen; zonder `-InputFile` verschijnt een bestandsvenster (of een padvraag). Met beide parameters blijft het script niet-interactief. Voorbeelden gebruiken fictieve namen zoals `GRP-App-Voorbeeld` en `C:\temp\gebruikers.txt`.
+
 ## [1.1.1] - 2026-11-23
 
 ### Opgelost
@@ -49,7 +54,8 @@ Eerste officiële release.
 - Purview: gebruikte de automatische variabele `$sender`.
 - Active Directory: enkele quotes in een e-mailadres konden het AD-filter breken.
 
-[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/RJLachman/PowerShell/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/RJLachman/PowerShell/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/RJLachman/PowerShell/releases/tag/v1.0.0

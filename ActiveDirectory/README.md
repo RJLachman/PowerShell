@@ -13,16 +13,18 @@ Leest e-mailadressen uit een tekstbestand en vergelijkt die met de gebruikers in
 
 Het script wijzigt niets in Active Directory. Optioneel wordt een tekstbestand met kant-en-klare `Add-ADGroupMember`-commando's weggeschreven; die commando's worden niet uitgevoerd.
 
+Zonder `-GroupName` en/of `-InputFile` vraagt het script interactief om de ontbrekende gegevens: je zoekt een AD-groep op naam (bij meerdere treffers kies je uit een lijst) en je kiest het bestand via een bestandsvenster of door een pad te typen. Met beide parameters blijven die vragen achterwege.
+
 ```powershell
 .\Compare-ADGroupMembership.ps1
-.\Compare-ADGroupMembership.ps1 -GroupName 'soft-apps-154' -InputFile 'C:\temp\suwi.txt' -ExpectedCount 84
-.\Compare-ADGroupMembership.ps1 -GroupName 'APP-Finance' -InputFile 'D:\lijsten\finance.txt' -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
+.\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
+.\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
 ```
 
 | Parameter | Omschrijving |
 |---|---|
-| `-GroupName` | Naam van de AD-groep (standaard `soft-apps-154`). |
-| `-InputFile` | Tekstbestand met e-mailadressen (standaard `C:\temp\suwi.txt`). Lege regels, commentaarregels (`#`), duplicaten en ongeldige adressen worden netjes afgehandeld. |
+| `-GroupName` | Naam van de AD-groep. Laat je deze weg, dan kun je op naam zoeken en een groep kiezen (q of leeg annuleert). |
+| `-InputFile` | Tekstbestand met e-mailadressen. Laat je deze weg, dan verschijnt een bestandsvenster (filter `*.txt;*.csv`) of een padvraag. Omringende aanhalingstekens worden verwijderd. Lege regels, commentaarregels (`#`), duplicaten en ongeldige adressen worden netjes afgehandeld. |
 | `-OutputFolder` | Map voor het rapport (standaard `C:\temp`). Bestandsnaam: `ADGroepVergelijking_<groep>_yyyyMMdd_HHmm.xlsx`. |
 | `-Recursive` | Neemt ook leden van geneste groepen mee. |
 | `-Server` | Optionele domeincontroller voor de AD-query's. |

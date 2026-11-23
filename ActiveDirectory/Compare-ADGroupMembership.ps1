@@ -26,10 +26,14 @@
 
 .PARAMETER GroupName
     Naam (SamAccountName of DistinguishedName) van de AD-groep die vergeleken wordt.
+    Laat je deze parameter weg, dan vraagt het script om een zoekterm en zoekt in AD
+    (Name of SamAccountName). Bij meerdere treffers kies je uit een lijst.
 
 .PARAMETER InputFile
     Tekstbestand met e-mailadressen. Lege regels en regels die met # beginnen worden genegeerd.
     Dubbele adressen worden één keer meegenomen en in het rapport vermeld.
+    Laat je deze parameter weg, dan verschijnt (indien mogelijk) een bestandsvenster
+    of een vraag om het pad.
 
 .PARAMETER OutputFolder
     Map waarin het rapport (en eventueel de commando-lijst) wordt opgeslagen.
@@ -50,18 +54,19 @@
 .EXAMPLE
     .\Compare-ADGroupMembership.ps1
 
-    Gebruikt de standaardgroep soft-apps-154 en de lijst C:\temp\suwi.txt.
-    Het rapport komt in C:\temp.
+    Vraagt om een zoekterm voor de AD-groep en om het bestand met e-mailadressen
+    (bestandsvenster of pad). Het rapport komt in C:\temp.
 
 .EXAMPLE
-    .\Compare-ADGroupMembership.ps1 -GroupName 'soft-apps-154' -InputFile 'C:\temp\suwi.txt' -ExpectedCount 84
+    .\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
 
-    Vergelijkt de groep met de lijst en waarschuwt als het aantal leden niet 84 is.
+    Vergelijkt de opgegeven groep met de lijst, zonder te vragen om groep of bestand.
 
 .EXAMPLE
-    .\Compare-ADGroupMembership.ps1 -GroupName 'APP-Finance' -InputFile 'D:\lijsten\finance.txt' -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
+    .\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
 
-    Inclusief geneste groepsleden, bevraagd op een specifieke domeincontroller.
+    Inclusief geneste groepsleden, met een controle op het verwachte aantal leden,
+    bevraagd op een specifieke domeincontroller.
 
 .INPUTS
     Geen. Het script leest de adressen uit -InputFile.
@@ -73,7 +78,7 @@
 
 .NOTES
     Auteur   : RJ Lachman
-    Versie   : 1.0.0
+    Versie   : 1.2.0
     Vereisten: Module ActiveDirectory (RSAT). Voor een Excel-rapport: module ImportExcel
                (Install-Module ImportExcel -Scope CurrentUser).
     Dit script wijzigt niets in Active Directory; het leest alleen gegevens en schrijft een rapport.
@@ -82,11 +87,11 @@
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$GroupName = 'soft-apps-154',
+    [string]$GroupName,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$InputFile = 'C:\temp\suwi.txt',
+    [string]$InputFile,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -451,6 +456,255 @@ function Add-WorksheetIfData {
     }
 }
 
+
+function Test-CanPromptUser {
+    <#
+    .SYNOPSIS
+        Geeft aan of het script de gebruiker om invoer kan vragen.
+    #>
+    return [Environment]::UserInteractive
+}
+
+function Get-CleanedFilePath {
+    <#
+    .SYNOPSIS
+        Haalt omringende aanhalingstekens (en een eventuele &-prefix) van een pad af.
+    #>
+    param(
+        [Parameter()]
+        [string]$Path
+    )
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $null }
+    $cleaned = $Path.Trim()
+    if ($cleaned.StartsWith('&')) {
+        $cleaned = $cleaned.TrimStart('&').Trim()
+    }
+    if ($cleaned.Length -ge 2) {
+        $first = $cleaned[0]
+        $last  = $cleaned[$cleaned.Length - 1]
+        if (($first -eq [char]'"' -and $last -eq [char]'"') -or
+            ($first -eq [char]"'" -and $last -eq [char]"'")) {
+            $cleaned = $cleaned.Substring(1, $cleaned.Length - 2).Trim()
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($cleaned)) { return $null }
+    return $cleaned
+}
+
+function Get-InputFilePath {
+    <#
+    .SYNOPSIS
+        Bepaalt het invoerbestand: opgegeven pad, bestandsvenster of padvraag.
+    #>
+    param(
+        [Parameter()]
+        [string]$Path
+    )
+
+    if ($Path) {
+        $cleaned = Get-CleanedFilePath -Path $Path
+        if (-not $cleaned -or -not (Test-Path -LiteralPath $cleaned -PathType Leaf)) {
+            Write-Status "Invoerbestand niet gevonden: $Path" 'Red'
+            return $null
+        }
+        return (Resolve-Path -LiteralPath $cleaned).ProviderPath
+    }
+
+    if (-not (Test-CanPromptUser)) {
+        Write-Status 'Geen invoerbestand opgegeven. Gebruik -InputFile of start het script interactief.' 'Red'
+        return $null
+    }
+
+    $dialogAttempted = $false
+    try {
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+        $dialog = New-Object System.Windows.Forms.OpenFileDialog
+        $dialog.Title = 'Selecteer het bestand met e-mailadressen'
+        $dialog.Filter = 'Tekstbestanden (*.txt;*.csv)|*.txt;*.csv|Alle bestanden (*.*)|*.*'
+        $dialog.Multiselect = $false
+        $dialog.CheckFileExists = $true
+        if (Test-Path -LiteralPath 'C:\temp') {
+            $dialog.InitialDirectory = 'C:\temp'
+        }
+        Write-Status 'Kies het bestand met e-mailadressen in het venster, of sluit het venster om een pad te typen.'
+        $dialogAttempted = $true
+        $result = $dialog.ShowDialog()
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $dialog.FileName) {
+            $selected = $dialog.FileName
+            if (Test-Path -LiteralPath $selected -PathType Leaf) {
+                return $selected
+            }
+            Write-Status "Gekozen bestand bestaat niet: $selected" 'Yellow'
+        }
+        else {
+            Write-Status 'Bestandsvenster gesloten. Typ het pad of q om te stoppen.' 'Yellow'
+        }
+    }
+    catch {
+        if ($dialogAttempted) {
+            Write-Verbose "Bestandsvenster afgebroken: $($_.Exception.Message)"
+        }
+        else {
+            Write-Verbose "Bestandsvenster niet beschikbaar: $($_.Exception.Message)"
+        }
+        Write-Status 'Bestandsvenster is niet beschikbaar. Typ het pad naar het bestand.' 'Yellow'
+    }
+
+    while ($true) {
+        $typed = Read-Host 'Pad naar het bestand met e-mailadressen (q om te stoppen)'
+        if ([string]::IsNullOrWhiteSpace($typed) -or $typed.Trim() -eq 'q' -or $typed.Trim() -eq 'Q') {
+            Write-Status 'Gestopt.' 'Yellow'
+            return $null
+        }
+        $cleaned = Get-CleanedFilePath -Path $typed
+        if ($cleaned -and (Test-Path -LiteralPath $cleaned -PathType Leaf)) {
+            return (Resolve-Path -LiteralPath $cleaned).ProviderPath
+        }
+        Write-Status "Bestand niet gevonden: $typed" 'Yellow'
+    }
+}
+
+function Search-AdGroupByTerm {
+    <#
+    .SYNOPSIS
+        Zoekt AD-groepen waarvan de naam of de SamAccountName de zoekterm bevat.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Term,
+
+        [Parameter()]
+        [hashtable]$AdParams,
+
+        [Parameter(Mandatory)]
+        [string[]]$GroupProperties
+    )
+    $safe = Get-SafeAdFilterValue $Term
+    $filter = "Name -like '*$safe*' -or SamAccountName -like '*$safe*'"
+    return @(Get-ADGroup -Filter $filter -Properties $GroupProperties @AdParams -ErrorAction Stop | Sort-Object Name)
+}
+
+function Select-AdGroupFromList {
+    <#
+    .SYNOPSIS
+        Toont gevonden groepen (maximaal 20) en laat de gebruiker er één kiezen.
+    .OUTPUTS
+        De gekozen AD-groep, $null bij annuleren, of een string als nieuwe zoekterm.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [object[]]$Match,
+
+        [Parameter(Mandatory)]
+        [int]$MaxShow
+    )
+
+    $visible = @($Match | Select-Object -First $MaxShow)
+    Write-Status "$($Match.Count) groepen gevonden. Kies een nummer, typ een nieuwe zoekterm, of q om te stoppen."
+    for ($i = 0; $i -lt $visible.Count; $i++) {
+        $item = $visible[$i]
+        $description = $item.Description
+        if ([string]::IsNullOrWhiteSpace($description)) { $description = '(geen beschrijving)' }
+        Write-Host ("  {0,2}. {1}  -  {2}" -f ($i + 1), $item.Name, $description)
+    }
+    if ($Match.Count -gt $MaxShow) {
+        Write-Host ("  ... en {0} extra. Verfijn de zoekterm voor een kortere lijst." -f ($Match.Count - $MaxShow)) -ForegroundColor Yellow
+    }
+
+    while ($true) {
+        $choice = Read-Host 'Nummer, nieuwe zoekterm of q'
+        if ([string]::IsNullOrWhiteSpace($choice) -or $choice.Trim() -eq 'q' -or $choice.Trim() -eq 'Q') {
+            return $null
+        }
+        $choice = $choice.Trim()
+        $parsed = 0
+        if ([int]::TryParse($choice, [ref]$parsed)) {
+            if ($parsed -ge 1 -and $parsed -le $visible.Count) {
+                return $visible[$parsed - 1]
+            }
+            Write-Status "Ongeldig nummer. Kies 1 tot $($visible.Count), typ een nieuwe zoekterm, of q om te stoppen." 'Yellow'
+            continue
+        }
+        return $choice
+    }
+}
+
+function Resolve-TargetAdGroup {
+    <#
+    .SYNOPSIS
+        Haalt de AD-groep op via -GroupName of via een interactieve zoekvraag.
+    #>
+    param(
+        [Parameter()]
+        [string]$Name,
+
+        [Parameter()]
+        [hashtable]$AdParams
+    )
+
+    $groupProperties = @('DistinguishedName', 'SamAccountName', 'Name', 'GroupScope', 'GroupCategory', 'Description')
+
+    if ($Name) {
+        try {
+            return Get-ADGroup -Identity $Name -Properties $groupProperties @AdParams -ErrorAction Stop
+        }
+        catch {
+            Write-Status "AD-groep '$Name' niet gevonden of niet leesbaar: $($_.Exception.Message)" 'Red'
+            return $null
+        }
+    }
+
+    if (-not (Test-CanPromptUser)) {
+        Write-Status 'Geen AD-groep opgegeven. Gebruik -GroupName of start het script interactief.' 'Red'
+        return $null
+    }
+
+    Write-Status 'Geen groep opgegeven. Zoek een AD-groep op naam (of typ q om te stoppen).'
+    $term = $null
+    while ($true) {
+        if (-not $term) {
+            $term = Read-Host 'Zoekterm of naam van de AD-groep (q om te stoppen)'
+            if ([string]::IsNullOrWhiteSpace($term) -or $term.Trim() -eq 'q' -or $term.Trim() -eq 'Q') {
+                Write-Status 'Gestopt.' 'Yellow'
+                return $null
+            }
+            $term = $term.Trim()
+        }
+
+        try {
+            $foundGroups = @(Search-AdGroupByTerm -Term $term -AdParams $AdParams -GroupProperties $groupProperties)
+        }
+        catch {
+            Write-Status "Zoeken in AD is mislukt: $($_.Exception.Message)" 'Red'
+            return $null
+        }
+
+        $term = $null
+        if ($foundGroups.Count -eq 0) {
+            Write-Status "Geen AD-groep gevonden voor die zoekterm. Probeer het opnieuw of typ q om te stoppen." 'Yellow'
+            continue
+        }
+
+        if ($foundGroups.Count -eq 1) {
+            $chosen = $foundGroups[0]
+            Write-Status "Eén groep gevonden: $($chosen.Name) [$($chosen.SamAccountName)]" 'Green'
+            return $chosen
+        }
+
+        $selected = Select-AdGroupFromList -Match $foundGroups -MaxShow 20
+        if ($null -eq $selected) {
+            Write-Status 'Gestopt.' 'Yellow'
+            return $null
+        }
+        if ($selected -is [string]) {
+            $term = $selected
+            continue
+        }
+        Write-Status "Gekozen groep: $($selected.Name) [$($selected.SamAccountName)]" 'Green'
+        return $selected
+    }
+}
+
 # --- Modules ------------------------------------------------------------------
 try {
     Import-Module ActiveDirectory -ErrorAction Stop
@@ -467,11 +721,15 @@ $script:UserProperties = @(
 )
 $adParams = Get-AdServerParameter
 
+# --- Groep bepalen ------------------------------------------------------------
+$group = Resolve-TargetAdGroup -Name $GroupName -AdParams $adParams
+if (-not $group) { return }
+Write-Status "AD-groep: $($group.Name) [$($group.SamAccountName)]"
+Write-Verbose "Groep gevonden: $($group.DistinguishedName)"
+
 # --- Invoer inlezen -----------------------------------------------------------
-if (-not (Test-Path -LiteralPath $InputFile)) {
-    Write-Status "Invoerbestand niet gevonden: $InputFile" 'Red'
-    return
-}
+$InputFile = Get-InputFilePath -Path $InputFile
+if (-not $InputFile) { return }
 
 Write-Verbose "Invoerbestand lezen: $InputFile"
 $rawLines = Get-Content -LiteralPath $InputFile
@@ -523,18 +781,7 @@ if ($duplicateEntries) {
     Write-Status "$($duplicateEntries.Count) dubbele regel(s) overgeslagen." 'Yellow'
 }
 
-# --- Groep ophalen ------------------------------------------------------------
-Write-Status "AD-groep ophalen: $GroupName"
-try {
-    $group = Get-ADGroup -Identity $GroupName -Properties DistinguishedName, SamAccountName, Name, GroupScope, GroupCategory, Description @adParams -ErrorAction Stop
-}
-catch {
-    Write-Status "AD-groep '$GroupName' niet gevonden of niet leesbaar: $($_.Exception.Message)" 'Red'
-    return
-}
-
-Write-Verbose "Groep gevonden: $($group.DistinguishedName)"
-
+# --- Groepsleden ophalen ------------------------------------------------------
 $memberIds = @()
 $usedMemberFallback = $false
 $memberParams = @{} + $adParams
