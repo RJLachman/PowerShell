@@ -416,7 +416,6 @@ function Add-WorksheetIfData {
         TableName     = ($WorksheetName -replace '[^A-Za-z0-9]', '')
         TableStyle    = $TableStyle
         PassThru      = $true
-        AutoNameRange = $true
     }
     if (Test-Path -LiteralPath $ExcelPath) {
         $params['Append'] = $true

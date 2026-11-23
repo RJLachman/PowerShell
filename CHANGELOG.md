@@ -7,6 +7,11 @@ en dit project volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-23
+
+### Opgelost
+- **Compare-ADGroupMembership.ps1** – geen waarschuwingen meer van Export-Excel over ongeldige tekens in bereiknamen (`E-mail op lijst`, `E-mail (mail)`, `Account actief`). De kolomkoppen blijven ongewijzigd.
+
 ## [1.1.0] - 2026-11-23
 
 ### Toegevoegd
@@ -44,6 +49,7 @@ Eerste officiële release.
 - Purview: gebruikte de automatische variabele `$sender`.
 - Active Directory: enkele quotes in een e-mailadres konden het AD-filter breken.
 
-[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/RJLachman/PowerShell/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/RJLachman/PowerShell/releases/tag/v1.0.0
