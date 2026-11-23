@@ -10,6 +10,7 @@ Een verzameling praktische PowerShell-scripts voor het beheer van Active Directo
 
 | Map | Script | Omschrijving |
 |---|---|---|
+| [ActiveDirectory](ActiveDirectory) | [Compare-ADGroupMembership.ps1](ActiveDirectory/Compare-ADGroupMembership.ps1) | Vergelijkt de leden van een AD-groep met een e-maillijst en maakt een Excel-rapport. Alleen-lezen. |
 | [ActiveDirectory](ActiveDirectory) | [Copy-ADGroupMembership.ps1](ActiveDirectory/Copy-ADGroupMembership.ps1) | Kopieert groepslidmaatschappen van een brongebruiker naar een doelgebruiker (op e-mailadres). |
 | [Exchange](Exchange) | [New-SharedRemoteMailbox.ps1](Exchange/New-SharedRemoteMailbox.ps1) | Maakt een shared remote mailbox aan (hybrid) en zet de AD Description. |
 | [Microsoft365/EntraID](Microsoft365/EntraID) | [Remove-StaleAzureADDevices.ps1](Microsoft365/EntraID/Remove-StaleAzureADDevices.ps1) | Exporteert en verwijdert Entra ID-apparaten die al X dagen niet zijn aangemeld (Microsoft Graph). |
@@ -25,6 +26,7 @@ Scripts die iets wijzigen of verwijderen ondersteunen **`-WhatIf`** (laat zien w
 - Windows PowerShell 5.1 of PowerShell 7+
 - Per script de benodigde module(s), bijvoorbeeld:
   - `ActiveDirectory` (RSAT) voor de AD- en rapportagescripts
+  - `ImportExcel` (optioneel) voor het Excel-rapport van Compare-ADGroupMembership
   - Exchange Management Shell voor de Exchange-scripts
   - `Microsoft.Graph` voor Entra ID
   - `ExchangeOnlineManagement` voor Purview (`Connect-IPPSSession`)
@@ -42,6 +44,9 @@ Get-Help .\ActiveDirectory\Copy-ADGroupMembership.ps1 -Full
 
 # Eerst droog draaien: laat zien wat er zou gebeuren, zonder iets te wijzigen
 .\ActiveDirectory\Copy-ADGroupMembership.ps1 -WhatIf
+
+# Groepsleden vergelijken met een e-maillijst (alleen-lezen, Excel-rapport)
+.\ActiveDirectory\Compare-ADGroupMembership.ps1 -GroupName 'soft-apps-154' -InputFile 'C:\temp\suwi.txt' -ExpectedCount 84
 ```
 
 Gedownloade scripts zijn mogelijk geblokkeerd door Windows. Deblokkeer ze met `Unblock-File` of stel een passende execution policy in (bijv. `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`).

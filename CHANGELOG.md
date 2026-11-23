@@ -7,6 +7,11 @@ en dit project volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-23
+
+### Toegevoegd
+- **ActiveDirectory/Compare-ADGroupMembership.ps1** – vergelijkt de gebruikersleden van een on-premises AD-groep met een e-maillijst en maakt een overzichtelijk Excel-rapport (of CSV als de module ImportExcel ontbreekt). Alleen-lezen; schrijft optioneel kant-en-klare `Add-ADGroupMember`-commando's weg zonder ze uit te voeren.
+
 ## [1.0.0] - 2026-11-19
 
 Eerste officiële release.
@@ -39,5 +44,6 @@ Eerste officiële release.
 - Purview: gebruikte de automatische variabele `$sender`.
 - Active Directory: enkele quotes in een e-mailadres konden het AD-filter breken.
 
-[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/RJLachman/PowerShell/releases/tag/v1.0.0
