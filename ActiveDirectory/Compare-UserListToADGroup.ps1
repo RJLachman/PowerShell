@@ -1,10 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    Vergelijkt de leden van een on-premises AD-groep met een lijst e-mailadressen en maakt een Excel-rapport.
+    Controleert een lijst gebruikers (e-mailadressen) tegen de leden van een on-premises AD-groep en maakt een Excel-rapport.
 
 .DESCRIPTION
-    Leest e-mailadressen uit een tekstbestand (één adres per regel) en haalt de
-    gebruikersleden van een Active Directory-groep op. Het script bepaalt daarna:
+    Leest een lijst gebruikers uit een tekstbestand (één e-mailadres per regel) en
+    vergelijkt die met de gebruikersleden van een Active Directory-groep.
+    Het script bepaalt daarna:
 
       - welke adressen van de lijst nog geen lid zijn van de groep (toevoegen);
       - welke adressen van de lijst nergens in AD terug te vinden zijn;
@@ -52,18 +53,18 @@
     Schrijft geen tekstbestand met Add-ADGroupMember-commando's weg.
 
 .EXAMPLE
-    .\Compare-ADGroupMembership.ps1
+    .\Compare-UserListToADGroup.ps1
 
     Vraagt om een zoekterm voor de AD-groep en om het bestand met e-mailadressen
     (bestandsvenster of pad). Het rapport komt in C:\temp.
 
 .EXAMPLE
-    .\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
+    .\Compare-UserListToADGroup.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
 
     Vergelijkt de opgegeven groep met de lijst, zonder te vragen om groep of bestand.
 
 .EXAMPLE
-    .\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
+    .\Compare-UserListToADGroup.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
 
     Inclusief geneste groepsleden, met een controle op het verwachte aantal leden,
     bevraagd op een specifieke domeincontroller.
@@ -78,7 +79,7 @@
 
 .NOTES
     Auteur   : RJ Lachman
-    Versie   : 1.2.0
+    Versie   : 1.3.0
     Vereisten: Module ActiveDirectory (RSAT). Voor een Excel-rapport: module ImportExcel
                (Install-Module ImportExcel -Scope CurrentUser).
     Dit script wijzigt niets in Active Directory; het leest alleen gegevens en schrijft een rapport.

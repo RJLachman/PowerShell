@@ -7,6 +7,11 @@ en dit project volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-23
+
+### Gewijzigd
+- **ActiveDirectory/Compare-UserListToADGroup.ps1** (voorheen **Compare-ADGroupMembership.ps1**) – hernoemd, zodat de bestandsnaam beter weergeeft dat het script een lijst gebruikers (e-mailadressen) controleert tegen een AD-groep. Aanroep, parameters en rapportage zijn verder gelijk.
+
 ## [1.2.0] - 2026-11-23
 
 ### Gewijzigd
@@ -54,7 +59,8 @@ Eerste officiële release.
 - Purview: gebruikte de automatische variabele `$sender`.
 - Active Directory: enkele quotes in een e-mailadres konden het AD-filter breken.
 
-[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/RJLachman/PowerShell/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/RJLachman/PowerShell/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/RJLachman/PowerShell/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/RJLachman/PowerShell/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/RJLachman/PowerShell/compare/v1.0.0...v1.1.0

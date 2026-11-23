@@ -4,21 +4,21 @@ Scripts voor lokale Active Directory.
 
 | Script | Omschrijving |
 |---|---|
-| [Compare-ADGroupMembership.ps1](Compare-ADGroupMembership.ps1) | Vergelijkt de gebruikersleden van een AD-groep met een lijst e-mailadressen en maakt een Excel-rapport. Alleen-lezen. |
+| [Compare-UserListToADGroup.ps1](Compare-UserListToADGroup.ps1) | Controleert een lijst gebruikers (e-mailadressen) tegen de leden van een AD-groep en maakt een Excel-rapport. Alleen-lezen. |
 | [Copy-ADGroupMembership.ps1](Copy-ADGroupMembership.ps1) | Kopieert de groepslidmaatschappen van een brongebruiker naar een doelgebruiker, op basis van e-mailadres. Toont eerst welke groepen erbij komen en vraagt om bevestiging. |
 
-## Compare-ADGroupMembership.ps1
+## Compare-UserListToADGroup.ps1
 
-Leest e-mailadressen uit een tekstbestand en vergelijkt die met de gebruikers in een AD-groep. Het rapport laat zien welke adressen nog toegevoegd moeten worden, welke nergens in AD staan, en welke groepsleden niet op de lijst voorkomen. Een adres telt als overeenkomst als het gelijk is aan `mail`, `UserPrincipalName` of een `smtp:`-proxyAddress (hoofdletterongevoelig).
+Controleert een lijst gebruikers (e-mailadressen in een tekstbestand) tegen de leden van een AD-groep. Het rapport laat zien welke adressen nog toegevoegd moeten worden, welke nergens in AD staan, en welke groepsleden niet op de lijst voorkomen. Een adres telt als overeenkomst als het gelijk is aan `mail`, `UserPrincipalName` of een `smtp:`-proxyAddress (hoofdletterongevoelig).
 
 Het script wijzigt niets in Active Directory. Optioneel wordt een tekstbestand met kant-en-klare `Add-ADGroupMember`-commando's weggeschreven; die commando's worden niet uitgevoerd.
 
 Zonder `-GroupName` en/of `-InputFile` vraagt het script interactief om de ontbrekende gegevens: je zoekt een AD-groep op naam (bij meerdere treffers kies je uit een lijst) en je kiest het bestand via een bestandsvenster of door een pad te typen. Met beide parameters blijven die vragen achterwege.
 
 ```powershell
-.\Compare-ADGroupMembership.ps1
-.\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
-.\Compare-ADGroupMembership.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
+.\Compare-UserListToADGroup.ps1
+.\Compare-UserListToADGroup.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt'
+.\Compare-UserListToADGroup.ps1 -GroupName 'GRP-App-Voorbeeld' -InputFile 'C:\temp\gebruikers.txt' -ExpectedCount 50 -OutputFolder 'D:\rapporten' -Recursive -Server 'DC01.contoso.local'
 ```
 
 | Parameter | Omschrijving |
@@ -49,5 +49,5 @@ Het Excel-rapport (module `ImportExcel`) bevat de werkbladen **Samenvatting**, *
 
 ## Vereisten
 - Module `ActiveDirectory` (RSAT)
-- Voor Compare-ADGroupMembership: leesrechten op de groep en gebruikers; voor een Excel-rapport de module `ImportExcel` (`Install-Module ImportExcel -Scope CurrentUser`)
+- Voor Compare-UserListToADGroup: leesrechten op de groep en gebruikers; voor een Excel-rapport de module `ImportExcel` (`Install-Module ImportExcel -Scope CurrentUser`)
 - Voor Copy-ADGroupMembership: rechten om groepsleden te wijzigen
